@@ -33,6 +33,7 @@ router.post('/upload', async (req, res) => {
     image.originalname = req.file.originalname;
     image.mimetype = req.file.mimetype;
     image.size = req.file.size;
+    image.category = "asignar";
 
     await image.save();
 
