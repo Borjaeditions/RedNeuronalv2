@@ -1,7 +1,7 @@
 const {createCanvas, loadImage, ImageData} = require('canvas');
 const fs = require("fs");
 const path = require("path");
-const { uuid } = require('uuidv4');
+const { v4: uuidv4 } = require('uuid');
 
 function imageRoute(route) {
     console.log(route);
@@ -10,17 +10,18 @@ function imageRoute(route) {
     console.log(route);
     console.log("Esta debe ser la ruta: " + route);
     console.log("Hasta ahora, todo bien");
-    loadImage(route).then((image) => {
-        imageLoaded(image);
+    imageLoaded(route);
+    /*loadImage(route).then((image) => {
         console.log("Esto debe ser la ruta bien hecha" + route);
     }).catch(err => {
         console.log('Error fatal', err);
-    })
+    })*/
 }
 function imageLoaded(route){
 
     var canvas = createCanvas(1200 , 1200);
     var ctx = canvas.getContext("2d");
+    console.log(__dirname);
     console.log("debería haber llegado hasta aquí: " + route)
     loadImage(route).then((image) => {
         // Carga la imagen desde una ruta en disco
@@ -194,7 +195,7 @@ function convolucionar(canvasFuente, canvasDestino) {
             //Teorema de pitágoras para tener los dos ejes en un sólo
             var mag = Math.sqrt(Math.pow(resultadoX, 2) + Math.pow(resultadoY, 2));
             //Eliminación de ruido
-            mag = (mag < 80) ? 0 : mag;
+            mag = (mag < 90) ? 0 : mag;
 
             pixelesDestino[idx] = mag; //rojo
             pixelesDestino[idx+1] = mag; //verde
@@ -219,10 +220,23 @@ function convolucionar(canvasFuente, canvasDestino) {
 
     const buffer = canvas2.toBuffer('image/png'); // Convierte a formato PNG
 
-    const filename = "imagen-bordes-" + uuid();
+    const filename = "imagen-bordes-" + uuidv4();
 
-    fs.writeFileSync(`images/${filename}.png`, buffer);
-    console.log("Imagen guardada")
+    saveImage(canvas2, filename);
 
 }
+function saveImage(canvas, filename) {
+    const outputDir = path.join(__dirname, 'images');
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir);
+    }
+    const outputFilename = path.join(outputDir, filename);
+    const out = fs.createWriteStream(outputFilename + ".png");
+    const stream = canvas.createPNGStream();
+    stream.pipe(out);
+    out.on('finish', () => {
+      console.log(`Image saved to ${outputFilename}`);
+    });
+}
+
 module.exports = imageRoute;
