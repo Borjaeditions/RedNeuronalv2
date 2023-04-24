@@ -2,6 +2,7 @@ const {createCanvas, loadImage, ImageData} = require('canvas');
 const fs = require("fs");
 const path = require("path");
 const { v4: uuidv4 } = require('uuid');
+const Jimp = require('jimp');
 
 function imageRoute(route) {
     console.log(route);
@@ -218,14 +219,14 @@ function convolucionar(canvasFuente, canvasDestino) {
     const imageData = new ImageData(imgDataDestino.data, finalWidth, finalHeight);
     ctx.putImageData(imageData, 0, 0);
 
-    const buffer = canvas2.toBuffer('image/png'); // Convierte a formato PNG
-
     const filename = "imagen-bordes-" + uuidv4();
 
     saveImage(canvas2, filename);
 
+
+
 }
-function saveImage(canvas, filename) {
+async function saveImage(canvas, filename) {
     const outputDir = path.join(__dirname, 'images');
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir);
@@ -234,9 +235,19 @@ function saveImage(canvas, filename) {
     const out = fs.createWriteStream(outputFilename + ".png");
     const stream = canvas.createPNGStream();
     stream.pipe(out);
-    out.on('finish', () => {
-      console.log(`Image saved to ${outputFilename}`);
-    });
+    await new Promise(resolve => out.on('finish', resolve));
+    console.log(`Image saved to ${outputFilename}.png`);
+    await compressImage(`${outputFilename}.png`);
+}
+
+async function compressImage(route){
+    try {
+        const image = await Jimp.read(route);
+        await image.resize(28, 28).writeAsync('images/prueba1.jpg');
+        console.log(`Image compressed and saved to images/prueba1.jpg`);
+    } catch (err) {
+        console.error(err);
+    }
 }
 
 module.exports = imageRoute;
