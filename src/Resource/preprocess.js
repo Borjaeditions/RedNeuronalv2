@@ -4,21 +4,21 @@ const path = require("path");
 const { v4: uuidv4 } = require('uuid');
 const Jimp = require('jimp');
 
-function imageRoute(route) {
+function imageRoute(route, filename) {
     console.log(route);
     route = path.join(__dirname, route);
     route = route.replace(/\\/g, '/');
     console.log(route);
     console.log("Esta debe ser la ruta: " + route);
     console.log("Hasta ahora, todo bien");
-    imageLoaded(route);
+    imageLoaded(route, filename);
     /*loadImage(route).then((image) => {
         console.log("Esto debe ser la ruta bien hecha" + route);
     }).catch(err => {
         console.log('Error fatal', err);
     })*/
 }
-function imageLoaded(route){
+function imageLoaded(route, filename){
 
     var canvas = createCanvas(1200 , 1200);
     var ctx = canvas.getContext("2d");
@@ -42,7 +42,7 @@ function imageLoaded(route){
     
     //visualizar imagen en documento html
     //var resultado = document.getElementById("Resultado");
-    convolucionar(canvas, resultado);
+    convolucionar(canvas, resultado, filename);
     });
 }
 function blancoYNegro(canvas){
@@ -75,7 +75,7 @@ function blancoYNegro(canvas){
     ctx.putImageData(imgData, 0, 0);
 
 }
-function convolucionar(canvasFuente, canvasDestino) {
+function convolucionar(canvasFuente, canvasDestino, filename) {
     //obtener las variables necesarias
     var ctxFuente = canvasFuente.getContext("2d");
     var imgDataFuente = ctxFuente.getImageData(0,0, canvasFuente.width, canvasFuente.height);
@@ -196,7 +196,7 @@ function convolucionar(canvasFuente, canvasDestino) {
             //Teorema de pitágoras para tener los dos ejes en un sólo
             var mag = Math.sqrt(Math.pow(resultadoX, 2) + Math.pow(resultadoY, 2));
             //Eliminación de ruido
-            mag = (mag < 90) ? 0 : mag;
+            mag = (mag < 80) ? 0 : mag;
 
             pixelesDestino[idx] = mag; //rojo
             pixelesDestino[idx+1] = mag; //verde
@@ -219,9 +219,9 @@ function convolucionar(canvasFuente, canvasDestino) {
     const imageData = new ImageData(imgDataDestino.data, finalWidth, finalHeight);
     ctx.putImageData(imageData, 0, 0);
 
-    const filename = "imagen-bordes-" + uuidv4();
+    const filenamefinal = "bordes-sobel-" + filename;
 
-    saveImage(canvas2, filename);
+    saveImage(canvas2, filenamefinal);
 
 
 
@@ -232,19 +232,20 @@ async function saveImage(canvas, filename) {
       fs.mkdirSync(outputDir);
     }
     const outputFilename = path.join(outputDir, filename);
-    const out = fs.createWriteStream(outputFilename + ".png");
+    const out = fs.createWriteStream(outputFilename);
     const stream = canvas.createPNGStream();
     stream.pipe(out);
     await new Promise(resolve => out.on('finish', resolve));
-    console.log(`Image saved to ${outputFilename}.png`);
-    await compressImage(`${outputFilename}.png`);
+    console.log(`Image saved to ${outputFilename}`);
+    await compressImage(`${outputFilename}`, filename);
 }
 
-async function compressImage(route){
+async function compressImage(route, outputFilename){
     try {
         const image = await Jimp.read(route);
-        await image.resize(28, 28).writeAsync('images/prueba1.jpg');
-        console.log(`Image compressed and saved to images/prueba1.jpg`);
+        //const finalimagesize = outputFilename;
+        await image.resize(28, 28).writeAsync(`src/Resource/images/compress/${outputFilename}.png`);
+        console.log(`Imagen comprimida guardada en images/compress/${outputFilename}.png`);
     } catch (err) {
         console.error(err);
     }

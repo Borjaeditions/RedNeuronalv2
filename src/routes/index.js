@@ -37,7 +37,7 @@ router.post('/upload', async (req, res) => {
     image.category = "asignar";
 
     await image.save();
-    sobel('../public/img/uploads/' + req.file.filename);
+    sobel('../public/img/uploads/' + req.file.filename, req.file.filename);
     //sobel('../public/img/uploads/' + 'image-696c99b4-31d7-44d3-a1f1-c4b1c976d41a.jpg');
     console.log(image);
     res.json({image});
