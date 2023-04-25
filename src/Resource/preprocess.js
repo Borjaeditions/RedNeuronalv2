@@ -224,7 +224,7 @@ function convolucionar(canvasFuente, canvasDestino, filename) {
     const filenamefinal = "bordes-sobel-" + filename;
 
     saveImage(canvas2, filenamefinal);
-    runModel(filenamefinal);
+    //runModel(filenamefinal);
 
 
 }
@@ -260,6 +260,7 @@ async function loadImageTF(imagePathCompress) {
     routeCompress = path.join(__dirname, 'images/compress/' + imagePathCompress);
     routeCompress = routeCompress.replace(/\\/g, '/');
     const imageBuffer = fs.readFileSync(routeCompress);
+    //console.log(imageBuffer);
     const decodedImage = tf.node.decodeImage(imageBuffer);
     const reshapedImage = decodedImage.expandDims(0);
     return reshapedImage;
@@ -267,7 +268,7 @@ async function loadImageTF(imagePathCompress) {
   
   async function runModel(imagePathModel) {
     console.log(path.join(__dirname, 'brain/model.json'));
-    const model = await tf.loadLayersModel(`http://127.0.0.1    /brain/model.json`);
+    const model = await tf.loadLayersModel(`http://127.0.0.1/brain/model.json`);
     const image = await loadImageTF(imagePathModel);
     const prediction = model.predict(image);
     console.log(prediction.toString());

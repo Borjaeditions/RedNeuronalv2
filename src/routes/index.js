@@ -34,7 +34,62 @@ router.post('/upload', async (req, res) => {
     image.originalname = req.file.originalname;
     image.mimetype = req.file.mimetype;
     image.size = req.file.size;
-    image.category = "asignar";
+
+    console.log(req.body.title);
+
+    //console.log();
+
+    if (req.body.title.toLowerCase().includes("camiseta")){
+        image.category = "T-shirt/top";
+        console.log("T-shirt/top");
+
+    }else if(req.body.title.toLowerCase().includes("pantalón")){
+
+        image.category = "Trouser";
+        console.log("Trouser");
+    }else if(req.body.title.toLowerCase().includes("Pullover")){
+
+        image.category = "jersey";
+        console.log("jersey");
+        
+    }else if(req.body.title.toLowerCase().includes("vestido")){
+
+        image.category = "Dress";
+        console.log("Dress");
+        
+    }else if(req.body.title.toLowerCase().includes("abrigo")){
+
+        image.category = "Coat";
+        console.log("Coat");
+        
+    }else if(req.body.title.toLowerCase().includes("Sandalia")){
+
+        image.category = "Sandal";
+        console.log("Sandal");
+        
+    }else if(req.body.title.toLowerCase().includes("Camisa")){
+
+        image.category = "Shirt";
+        console.log("Shirt")
+        
+    }else if(req.body.title.toLowerCase().includes("Zapatillas")){
+
+        image.category = "Sneaker";
+        console.log("Sneaker");
+        
+    }else if(req.body.title.toLowerCase().includes("bolsa")){
+        
+        image.category = "bag";
+        console.log("bag");
+        
+    }else if(req.body.title.toLowerCase().includes("Botín")){
+
+        image.category = "Ankle boot";
+        console.log("Ankle boot");
+        
+    }
+
+    //image.category = "asignar";
 
     await image.save();
     sobel('../public/img/uploads/' + req.file.filename, req.file.filename);
