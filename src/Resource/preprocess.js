@@ -4,6 +4,8 @@ const path = require("path");
 const { v4: uuidv4 } = require('uuid');
 const Jimp = require('jimp');
 
+const tf = require('@tensorflow/tfjs');
+
 function imageRoute(route, filename) {
     console.log(route);
     route = path.join(__dirname, route);
@@ -222,7 +224,7 @@ function convolucionar(canvasFuente, canvasDestino, filename) {
     const filenamefinal = "bordes-sobel-" + filename;
 
     saveImage(canvas2, filenamefinal);
-
+    runModel(filenamefinal);
 
 
 }
@@ -244,11 +246,31 @@ async function compressImage(route, outputFilename){
     try {
         const image = await Jimp.read(route);
         //const finalimagesize = outputFilename;
-        await image.resize(28, 28).writeAsync(`src/Resource/images/compress/${outputFilename}.png`);
-        console.log(`Imagen comprimida guardada en images/compress/${outputFilename}.png`);
+        await image.resize(28, 28).writeAsync(`src/Resource/images/compress/${outputFilename}`);
+        console.log(`Imagen comprimida guardada en images/compress/${outputFilename}`);
     } catch (err) {
         console.error(err);
     }
 }
+
+//Llamar al modelo de la red neuronal convolucional
+
+async function loadImageTF(imagePathCompress) {
+    console.log(path.join(__dirname, 'images/compress/' + imagePathCompress));
+    routeCompress = path.join(__dirname, 'images/compress/' + imagePathCompress);
+    routeCompress = routeCompress.replace(/\\/g, '/');
+    const imageBuffer = fs.readFileSync(routeCompress);
+    const decodedImage = tf.node.decodeImage(imageBuffer);
+    const reshapedImage = decodedImage.expandDims(0);
+    return reshapedImage;
+  }
+  
+  async function runModel(imagePathModel) {
+    console.log(path.join(__dirname, 'brain/model.json'));
+    const model = await tf.loadLayersModel(`http://127.0.0.1    /brain/model.json`);
+    const image = await loadImageTF(imagePathModel);
+    const prediction = model.predict(image);
+    console.log(prediction.toString());
+  }
 
 module.exports = imageRoute;
