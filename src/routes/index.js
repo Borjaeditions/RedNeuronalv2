@@ -88,6 +88,9 @@ router.post('/upload', async (req, res) => {
         console.log("Ankle boot");
         
     }
+    else{
+        image.category = "T-shirt/top";
+    }
 
     //image.category = "asignar";
 

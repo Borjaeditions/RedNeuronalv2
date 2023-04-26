@@ -3,8 +3,10 @@ const fs = require("fs");
 const path = require("path");
 const { v4: uuidv4 } = require('uuid');
 const Jimp = require('jimp');
+const sharp = require('sharp');
 
-const tf = require('@tensorflow/tfjs');
+
+const tf = require('@tensorflow/tfjs-node');
 
 function imageRoute(route, filename) {
     console.log(route);
@@ -77,7 +79,7 @@ function blancoYNegro(canvas){
     ctx.putImageData(imgData, 0, 0);
 
 }
-function convolucionar(canvasFuente, canvasDestino, filename) {
+async function convolucionar(canvasFuente, canvasDestino, filename) {
     //obtener las variables necesarias
     var ctxFuente = canvasFuente.getContext("2d");
     var imgDataFuente = ctxFuente.getImageData(0,0, canvasFuente.width, canvasFuente.height);
@@ -223,9 +225,9 @@ function convolucionar(canvasFuente, canvasDestino, filename) {
 
     const filenamefinal = "bordes-sobel-" + filename;
 
-    saveImage(canvas2, filenamefinal);
-    //runModel(filenamefinal);
-
+    await saveImage(canvas2, filenamefinal);
+    await runModelTF(filenamefinal);
+    //fs.writeFileSync(`images/${filename}.png`, buffer);
 
 }
 async function saveImage(canvas, filename) {
@@ -238,21 +240,63 @@ async function saveImage(canvas, filename) {
     const stream = canvas.createPNGStream();
     stream.pipe(out);
     await new Promise(resolve => out.on('finish', resolve));
-    console.log(`Image saved to ${outputFilename}`);
+    console.log(`Imagen guardada en: ${outputFilename}`);
+    await rotateImage(path.join(__dirname, 'images', filename), 90)
+        .then(() => console.log('Imagen rotada exitosamente'))
+        .catch(err => console.error(err));
     await compressImage(`${outputFilename}`, filename);
 }
+
+async function rotateImage(filepath, degrees) {
+    const image = await Jimp.read(filepath);
+    image.rotate(degrees);
+    await image.writeAsync(filepath);
+  }
 
 async function compressImage(route, outputFilename){
     try {
         const image = await Jimp.read(route);
         //const finalimagesize = outputFilename;
-        await image.resize(28, 28).writeAsync(`src/Resource/images/compress/${outputFilename}`);
+        await image.resize(28, 28).writeAsync(`src/Resource/images/compress/${outputFilename}`, {rotate:90});
         console.log(`Imagen comprimida guardada en images/compress/${outputFilename}`);
     } catch (err) {
         console.error(err);
     }
 }
 
+// Cargamos el modelo
+async function runModelTF(filenamefinal){
+    const model = await tf.loadLayersModel('http://127.0.0.1/brain/model.json');
+
+    // Definimos una función para preprocesar la imagen
+    async function preprocessImage(imagePath) {
+    const image = await Jimp.read(imagePath);
+    image.resize(28, 28); // Redimensionamos la imagen
+    const imageData = new Float32Array(28 * 28); // Creamos un array para almacenar los datos de la imagen
+    let i = 0;
+    image.scan(0, 0, image.bitmap.width, image.bitmap.height, function (x, y, idx) {
+        // Convertimos los datos de los píxeles a valores entre 0 y 1 y los almacenamos en el array
+        imageData[i++] = this.bitmap.data[idx] / 255;
+    });
+    const tensor = tf.tensor4d(imageData, [1, 28, 28, 1]); // Convertimos el array en un tensor
+    return tensor;
+    }
+
+    // Definimos una función para pasar la imagen al modelo
+    async function predictImage(imagePath) {
+    const tensor = await preprocessImage(imagePath); // Preprocesamos la imagen
+    const prediction = model.predict(tensor); // Hacemos la predicción
+    const result = prediction.arraySync()[0]; // Obtenemos los resultados como un array
+    console.log(result); // Imprimimos los resultados en la consola
+    }
+
+    // Llamamos a la función para predecir la imagen
+    const imagePath = path.join(__dirname, 'images', filenamefinal);
+    console.log(imagePath);
+    predictImage(imagePath);
+}
+
+/*
 //Llamar al modelo de la red neuronal convolucional
 
 async function loadImageTF(imagePathCompress) {
@@ -273,5 +317,5 @@ async function loadImageTF(imagePathCompress) {
     const prediction = model.predict(image);
     console.log(prediction.toString());
   }
-
+*/
 module.exports = imageRoute;
