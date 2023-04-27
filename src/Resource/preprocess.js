@@ -3,7 +3,6 @@ const fs = require("fs");
 const path = require("path");
 const { v4: uuidv4 } = require('uuid');
 const Jimp = require('jimp');
-const sharp = require('sharp');
 
 
 const tf = require('@tensorflow/tfjs-node');
@@ -241,9 +240,9 @@ async function saveImage(canvas, filename) {
     stream.pipe(out);
     await new Promise(resolve => out.on('finish', resolve));
     console.log(`Imagen guardada en: ${outputFilename}`);
-    await rotateImage(path.join(__dirname, 'images', filename), 90)
+    /*await rotateImage(path.join(__dirname, 'images', filename), 90)
         .then(() => console.log('Imagen rotada exitosamente'))
-        .catch(err => console.error(err));
+        .catch(err => console.error(err));*/
     await compressImage(`${outputFilename}`, filename);
 }
 
@@ -266,7 +265,7 @@ async function compressImage(route, outputFilename){
 
 // Cargamos el modelo
 async function runModelTF(filenamefinal){
-    const model = await tf.loadLayersModel('http://127.0.0.1/brain/model.json');
+    const model = await tf.loadLayersModel('http://127.0.0.1/brain2/model.json');
 
     // Definimos una función para preprocesar la imagen
     async function preprocessImage(imagePath) {
@@ -287,7 +286,11 @@ async function runModelTF(filenamefinal){
     const tensor = await preprocessImage(imagePath); // Preprocesamos la imagen
     const prediction = model.predict(tensor); // Hacemos la predicción
     const result = prediction.arraySync()[0]; // Obtenemos los resultados como un array
+    const mayorIndice = result.indexOf(Math.max.apply(null, result));
+
     console.log(result); // Imprimimos los resultados en la consola
+    //console.log("6")
+    console.log(mayorIndice);
     }
 
     // Llamamos a la función para predecir la imagen
