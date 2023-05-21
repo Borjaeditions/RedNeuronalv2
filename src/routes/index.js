@@ -67,7 +67,7 @@ router.post('/upload', async (req, res) => {
         image.category = "Sandal";
         console.log("Sandal");
         
-    }else if(req.body.title.toLowerCase().includes("Camisa")){
+    }else if(req.body.title.toLowerCase().includes("camisa")){
 
         image.category = "Shirt";
         console.log("Shirt")

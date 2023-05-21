@@ -205,10 +205,18 @@ async function convolucionar(canvasFuente, canvasDestino, filename) {
             pixelesDestino[idx+1] = mag; //verde
             pixelesDestino[idx+2] = mag; //azul
             pixelesDestino[idx+3] = 255; //alpha
+            
         }
-
+ 
     }
-
+    /*
+    for (var i = 0; i < pixelesDestino.length; i += 4) {
+        pixelesDestino[i] = 255 - pixelesDestino[i];         // componente rojo
+        pixelesDestino[i+1] = 255 - pixelesDestino[i+1];     // componente verde
+        pixelesDestino[i+2] = 255 - pixelesDestino[i+2];     // componente azul
+        // no se necesita cambiar la transparencia (componente alfa)
+    }
+    */
     var finalWidth = canvasDestino.width;
     var finalHeight = canvasDestino.height;
 
@@ -223,8 +231,10 @@ async function convolucionar(canvasFuente, canvasDestino, filename) {
     ctx.putImageData(imageData, 0, 0);
 
     const filenamefinal = "bordes-sobel-" + filename;
-
+    //imagen con sobel
     await saveImage(canvas2, filenamefinal);
+    //imagen a color
+    //await saveImage(canvasFuente, filenamefinal);
     await runModelTF(filenamefinal);
     //fs.writeFileSync(`images/${filename}.png`, buffer);
 
