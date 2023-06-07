@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const { v4: uuidv4 } = require('uuid');
 const Jimp = require('jimp');
+const Image = require('../models/image.js');
 
 
 const tf = require('@tensorflow/tfjs-node');
@@ -80,6 +81,11 @@ function blancoYNegro(canvas){
 }
 async function convolucionar(canvasFuente, canvasDestino, filename) {
     //obtener las variables necesarias
+
+    var ctxbyn = canvasFuente.getContext("2d");
+    var imgDatabyn = ctxbyn.getImageData(0,0, canvasFuente.width, canvasFuente.height);
+    //var pixelesbyn = imgDataFuente.data;
+
     var ctxFuente = canvasFuente.getContext("2d");
     var imgDataFuente = ctxFuente.getImageData(0,0, canvasFuente.width, canvasFuente.height);
     var pixelesFuente = imgDataFuente.data;    
@@ -222,20 +228,27 @@ async function convolucionar(canvasFuente, canvasDestino, filename) {
 
     console.log(finalWidth + finalHeight);
     const canvas2 = createCanvas(finalWidth, finalHeight); // El tamaño del canvas se define con los valores de finalWidth y finalHeight
+    const canvas3 = createCanvas(finalWidth, finalHeight); // El tamaño del canvas se define con los valores de finalWidth y finalHeight
     console.log(canvas2); // No es necesario concatenar el objeto canvas con una cadena de texto
     console.log(finalWidth, finalHeight);
 
     const ctx = canvas2.getContext('2d');
+    const ctxgrey = canvas3.getContext('2d');
 
+    const imageDatagrey = new ImageData(imgDatabyn.data, finalWidth, finalHeight);
     const imageData = new ImageData(imgDataDestino.data, finalWidth, finalHeight);
     ctx.putImageData(imageData, 0, 0);
-
+    ctxgrey.putImageData(imageData, 0, 0);
+    
     const filenamefinal = "bordes-sobel-" + filename;
+    const filenamegrey = "bordes-grey-" + filename;
+    await saveImage(canvas3, filenamegrey);
+    
     //imagen con sobel
     await saveImage(canvas2, filenamefinal);
     //imagen a color
     //await saveImage(canvasFuente, filenamefinal);
-    await runModelTF(filenamefinal);
+    await runModelTF(filenamegrey);
     //fs.writeFileSync(`images/${filename}.png`, buffer);
 
 }
@@ -296,7 +309,65 @@ async function runModelTF(filenamefinal){
     const tensor = await preprocessImage(imagePath); // Preprocesamos la imagen
     const prediction = model.predict(tensor); // Hacemos la predicción
     const result = prediction.arraySync()[0]; // Obtenemos los resultados como un array
-    const mayorIndice = result.indexOf(Math.max.apply(null, result));
+    let mayorIndice = result.indexOf(Math.max.apply(null, result));
+
+    if (mayorIndice == 0){
+
+        mayorIndice = mayorIndice + " T-shirt/top";
+
+    }else if(mayorIndice == 1){
+
+        mayorIndice = mayorIndice + " Trouser";
+
+    }else if(mayorIndice == 2){
+
+        mayorIndice = mayorIndice + " jersey";
+        
+    }else if(mayorIndice == 3){
+
+        mayorIndice = mayorIndice + " Dress";
+        
+    }else if(mayorIndice == 4){
+
+        mayorIndice = mayorIndice + " Coat";
+        
+    }else if(mayorIndice == 5){
+
+        mayorIndice = mayorIndice + " Sandal";
+        
+    }else if(mayorIndice == 6){
+
+        mayorIndice = mayorIndice + " Shirt";
+        
+    }else if(mayorIndice == 7){
+
+        mayorIndice = mayorIndice + " Sneaker";
+        
+    }else if(mayorIndice == 8){
+        
+        mayorIndice = mayorIndice + " bag";;
+        
+    }else if(mayorIndice == 9){
+
+        mayorIndice = mayorIndice + " Ankle boot";
+        
+    }
+
+    //sobreescribir image.category
+    const filter = {};
+    const update = { category: mayorIndice };
+    const options = { sort: { created_at: -1 }, new: true }; // Ordenar por created_at en orden descendente
+
+    const lastImage = await Image.findOne(filter, {}, options);
+
+    //comprobar que la base de datos no este vacía
+    if (lastImage) {
+      lastImage.category = mayorIndice;
+      await lastImage.save();
+      console.log('El valor de category se actualizó en el último registro.');
+    } else {
+      console.log('No se encontraron registros en la base de datos.');
+    }
 
     console.log(result); // Imprimimos los resultados en la consola
     //console.log("6")
